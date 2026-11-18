@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>All-in-One Reading Passages</title>
+<style>
+  :root { --ink:#1b1f27; --muted:#6b7280; --bg:#f6f7f9; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:"Nanum Gothic","Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:56px 20px 40px; }
+  h1 { font-size:clamp(28px,5vw,44px); font-weight:800; letter-spacing:-.01em; text-align:center; }
+  p.sub { margin:12px 0 40px; color:var(--muted); font-size:clamp(15px,2.2vw,18px); text-align:center; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px; width:100%; max-width:1000px; }
+  a.card { display:block; background:#fff; border-radius:14px; padding:28px 26px 24px; text-decoration:none; color:inherit; box-shadow:0 2px 12px rgba(0,0,0,.08); border-top:6px solid var(--c); transition:transform .15s, box-shadow .15s; }
+  a.card:hover, a.card:focus-visible { transform:translateY(-4px); box-shadow:0 8px 22px rgba(0,0,0,.14); outline:none; }
+  .tag { font-size:13px; font-weight:800; color:var(--c); letter-spacing:.06em; text-transform:uppercase; }
+  .card h2 { font-size:26px; font-weight:800; margin:8px 0 6px; line-height:1.25; }
+  .card .ex { font-size:15px; color:var(--muted); line-height:1.5; }
+  .card .n { margin-top:18px; font-size:14px; font-weight:700; color:var(--ink); display:flex; justify-content:space-between; }
+  .card .go { color:var(--c); }
+  footer { margin-top:44px; color:#9aa1ad; font-size:13px; text-align:center; line-height:1.6; }
+</style>
+</head>
+<body>
+  <h1>All-in-One Reading Passages</h1>
+  <p class="sub">본문을 읽고 질문에 답해요. 클릭하면 정답과 밑줄이 함께 나타나요.</p>
+  <div class="grid">
+    <a class="card" style="--c:#e5484d" href="short/">
+      <div class="tag">Level 1</div><h2>Short Vowels</h2>
+      <div class="ex">ad · ag · am · an · ap · at · ed · en · et · id · ig · im · in · ip · it · ob · og · op · ot · ub · ug · un · ut</div>
+      <div class="n"><span>23 passages</span><span class="go">열기 →</span></div>
+    </a>
+    <a class="card" style="--c:#2f6fed" href="long/">
+      <div class="tag">Level 2</div><h2>Long Vowels</h2>
+      <div class="ex">a_e · ai · ay · ea · ee · ie · y · i_e · igh · o_e · oa · ow · u_e · ue · ew</div>
+      <div class="n"><span>17 passages</span><span class="go">열기 →</span></div>
+    </a>
+    <a class="card" style="--c:#1f9d55" href="diph/">
+      <div class="tag">Level 3</div><h2>Diphthongs &amp; R-Controlled Vowels</h2>
+      <div class="ex">al · au · aw · o · oi · oo · ou · ough · ow · oy · ar · air · are · er · ear · ir · ire · or · ore · our · oar · ur</div>
+      <div class="n"><span>23 passages</span><span class="go">열기 →</span></div>
+    </a>
+    <a class="card" style="--c:#c27a00" href="blend/">
+      <div class="tag">Level 4</div><h2>Blends &amp; Digraphs</h2>
+      <div class="ex">bl · cl · fl · gl · pl · sl · br · cr · dr · fr · gr · pr · tr · sc · sn · sp · st · sw · sh · ch · th · wh · ck · nt · nd · mp</div>
+      <div class="n"><span>29 passages</span><span class="go">열기 →</span></div>
+    </a>
+  </div>
+  <footer>슬라이드 안에서: 클릭 · Space · → 다음 정답 &nbsp;|&nbsp; ← 이전 &nbsp;|&nbsp; ↑ ↓ 슬라이드 이동 &nbsp;|&nbsp; F 전체화면<br>Passages © A Teachable Teacher</footer>
+</body>
+</html>

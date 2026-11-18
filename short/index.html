@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Short Vowels - Read and Respond</title>
+<style>
+  :root { --bg:#f6f7f9; --ink:#1b1f27; --muted:#8a919c; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { height:100%; background:#111; overflow:hidden; font-family:"Nanum Gothic","Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif; }
+  #wrap { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+  #stage { width:1280px; height:720px; background:var(--bg); position:relative; transform-origin:center center; flex:none; overflow:hidden; cursor:pointer; user-select:none; }
+  .pageno { position:absolute; right:40px; top:28px; font-size:16px; font-weight:700; color:var(--muted); letter-spacing:.04em; }
+  .badge { text-decoration:none; position:absolute; left:40px; top:26px; font-size:15px; font-weight:700; color:var(--muted); }
+  .passage { position:absolute; left:30px; top:78px; width:760px; background:#fff; border-radius:6px; box-shadow:0 2px 14px rgba(0,0,0,.12); overflow:hidden; }
+  .passage img { position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .hl { position:absolute; height:6px; border-radius:3px; transform:scaleX(0); transform-origin:left center; transition:transform .7s cubic-bezier(.3,.7,.2,1); }
+  .hl.on { transform:scaleX(1); }
+  .qa { position:absolute; left:820px; top:78px; width:430px; height:586px; display:flex; flex-direction:column; }
+  .q { flex:1; padding:12px 0 6px; }
+  .q + .q { border-top:1px solid #dde1e7; }
+  .q h3 { font-size:23px; line-height:1.35; font-weight:800; color:var(--ink); }
+  .ans { margin:12px 0 0 22px; font-size:22.5px; line-height:1.35; font-weight:700; opacity:0; transform:translateY(10px); transition:opacity .5s ease .25s, transform .5s ease .25s; }
+  .ans.on { opacity:1; transform:none; }
+  .ans::before { content:""; display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:10px; background:currentColor; vertical-align:middle; }
+  .hint { position:absolute; left:0; right:0; bottom:10px; text-align:center; font-size:13px; color:#a2a8b2; }
+  .dots { position:absolute; left:820px; bottom:22px; display:flex; gap:8px; }
+  .dots i { width:9px; height:9px; border-radius:50%; background:#d3d7de; transition:background .3s; }
+  .dots i.on { background:#555; }
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+  <a class="badge" id="home" href="../">← 메인 · Short Vowels</a>
+  <div class="pageno" id="pageno"></div>
+  <div class="passage" id="passage"></div>
+  <div class="qa" id="qa"></div>
+  <div class="dots" id="dots"></div>
+  <div class="hint">클릭 · Space · → 다음 정답  |  ← 이전  |  ↑ ↓ 슬라이드 이동  |  R 처음부터  |  F 전체화면</div>
+</div></div>
+<script>
+(function(){
+  var DATA=[{"img": "pg01.jpg", "ratio": 1.3031, "qs": [{"q": "Was dad mad?", "a": "No. Dad was not mad. He was sad.", "segs": [[14.68, 54.41, 44.46], [4.72, 65.05, 19.66]]}, {"q": "How did she make dad glad?", "a": "She gave him a big hug.", "segs": [[19.29, 75.7, 35.6]]}, {"q": "What does glad mean?", "a": "Glad means not sad.", "segs": [[4.72, 86.34, 57.49], [4.72, 96.99, 33.24]]}]}, {"img": "pg02.jpg", "ratio": 1.3031, "qs": [{"q": "What was in the bag?", "a": "There was a flag in the bag.", "segs": [[3.98, 43.76, 30.75]]}, {"q": "What did the tag say?", "a": "The tag said, “I fixed the snag.”", "segs": [[16.24, 54.41, 37.35], [3.98, 65.05, 17.18]]}, {"q": "What is a snag?", "a": "A snag is a rip.", "segs": [[12.65, 75.7, 29.34]]}]}, {"img": "pg03.jpg", "ratio": 1.3031, "qs": [{"q": "What time is it?", "a": "It is time to eat.", "segs": [[9.87, 33.33, 28.62]]}, {"q": "What is something the boy does not want to eat?", "a": "The boy does not want ham, jam, or a yam.", "segs": [[22.06, 75.7, 34.64], [3.98, 86.34, 58.11], [3.98, 96.99, 11.26]]}, {"q": "What does the boy want to eat?", "a": "He wants some pie.", "segs": [[17.83, 96.99, 30.56]]}]}, {"img": "pg04.jpg", "ratio": 1.3031, "qs": [{"q": "What colour is the van?", "a": "The van is tan.", "segs": [[9.87, 33.33, 42.05]]}, {"q": "What is the problem with the van?", "a": "It can get hot in the van.", "segs": [[3.98, 43.76, 49.9]]}, {"q": "What does the man do to fix the problem?", "a": "The man puts a fan in the van.", "segs": [[3.98, 75.7, 49.97]]}]}, {"img": "pg05.jpg", "ratio": 1.3031, "qs": [{"q": "Who is Chap?", "a": "Chap is the one who sat on Dad’s lap.", "segs": [[9.87, 33.33, 38.12]]}, {"q": "What will Dad and Chap do first?", "a": "They will take a nap first.", "segs": [[12.94, 43.76, 43.24]]}, {"q": "What will Dad and Chap do last?", "a": "They will look at the map last.", "segs": [[50.01, 54.41, 8.14], [3.98, 65.05, 42.5]]}]}, {"img": "pg06.jpg", "ratio": 1.3031, "qs": [{"q": "Why did they sit down?", "a": "They sat down to chat.", "segs": [[10.6, 33.33, 47.41]]}, {"q": "What does chat mean?", "a": "Chat means to talk.", "segs": []}, {"q": "What did they have that is the same?", "a": "They had the same hats on.", "segs": [[22.71, 86.34, 39.12], [4.72, 96.99, 51.86]]}]}, {"img": "pg07.jpg", "ratio": 1.3031, "qs": [{"q": "What is wrong with Ned?", "a": "Ned is sick.", "segs": [[9.87, 33.33, 18.73]]}, {"q": "What does mum want Ned to do?", "a": "Mum wants Ned to feel better.", "segs": [[13.22, 43.76, 37.39], [3.98, 54.41, 24.1]]}, {"q": "What did Dad say?", "a": "Dad said, “Get better Ned!”", "segs": [[20.84, 75.7, 30.86], [3.98, 86.34, 15.21]]}]}, {"img": "pg08.jpg", "ratio": 1.3031, "qs": [{"q": "What are their names?", "a": "Their names are Ben and Ken.", "segs": [[9.87, 33.33, 40.88]]}, {"q": "When did the men meet?", "a": "They met when they were ten.", "segs": [[3.98, 54.41, 35.84], [3.98, 65.05, 16.34]]}, {"q": "How do the men feel about being friends?", "a": "They are happy that they met.", "segs": [[3.98, 75.7, 45.94], [3.98, 86.34, 24.44]]}]}, {"img": "pg09.jpg", "ratio": 1.3031, "qs": [{"q": "What is wrong with her pet?", "a": "Her pet is sick.", "segs": [[9.87, 33.33, 24.52]]}, {"q": "Who did she take her pet to see?", "a": "She took her pet to the vet.", "segs": [[36.99, 33.33, 17.1], [3.98, 43.76, 25.0]]}, {"q": "What did the vet say?", "a": "The vet said, “Not yet. Do not let your pet get wet.”", "segs": [[50.25, 54.41, 7.63], [3.98, 65.05, 49.08], [3.98, 75.7, 9.02]]}]}, {"img": "pg10.jpg", "ratio": 1.3031, "qs": [{"q": "Where did Sid and Dad go?", "a": "They went to the park.", "segs": [[9.87, 33.33, 51.69]]}, {"q": "What did Sid and Dad do by the tree?", "a": "They hid by the tree.", "segs": [[3.98, 75.7, 42.48], [3.98, 86.34, 26.97]]}, {"q": "What did Dad tell Sid?", "a": "Dad said, “You are such a silly kid, Sid!”", "segs": [[33.55, 86.34, 14.79], [3.98, 96.99, 34.28]]}]}, {"img": "pg11.jpg", "ratio": 1.3031, "qs": [{"q": "What colour is Zig?", "a": "Zig is pink.", "segs": [[9.87, 33.33, 29.08]]}, {"q": "What does Zig love to do?", "a": "Zig loves to dig.", "segs": [[3.98, 54.41, 26.19]]}, {"q": "What happens when Zig digs?", "a": "Zig digs big holes, and it makes a big mess.", "segs": [[3.98, 75.7, 29.7], [3.98, 86.34, 44.6], [3.98, 96.99, 10.51]]}]}, {"img": "pg12.jpg", "ratio": 1.3031, "qs": [{"q": "Who swam first?", "a": "Jim swam first.", "segs": [[9.87, 34.35, 36.65]]}, {"q": "What did Kim want to do?", "a": "Kim wanted to swim with Jim.", "segs": [[16.13, 45.63, 35.04], [3.98, 57.13, 24.67]]}, {"q": "Who took Kim to swim?", "a": "Mum took Kim to swim.", "segs": [[3.98, 80.12, 47.77], [3.98, 91.41, 6.87]]}]}, {"img": "pg13.jpg", "ratio": 1.3031, "qs": [{"q": "What is Lin trying to guess?", "a": "Lin is trying to guess what is in the bin.", "segs": [[9.87, 33.33, 36.05], [3.98, 43.76, 21.81]]}, {"q": "What was in the bin?", "a": "There were tin cans in the bin.", "segs": [[38.8, 54.41, 6.53], [3.98, 65.05, 35.12]]}, {"q": "What did Lin win?", "a": "Lin won all the tin in the bin.", "segs": [[3.98, 96.99, 49.34]]}]}, {"img": "pg14.jpg", "ratio": 1.3031, "qs": [{"q": "What can the boy do?", "a": "The boy can zip his jacket.", "segs": [[29.03, 33.33, 21.68], [3.98, 43.76, 11.04]]}, {"q": "How does he start to zip his jacket?", "a": "He puts his jacket on first.", "segs": [[17.61, 43.76, 28.54]]}, {"q": "Who is watching the boy zip his jacket?", "a": "Mum is watching the boy zip his jacket.", "segs": [[9.87, 33.33, 17.87]]}]}, {"img": "pg15.jpg", "ratio": 1.3031, "qs": [{"q": "What was Tom eating?", "a": "Tom was eating a peach.", "segs": [[20.8, 33.33, 35.94], [3.98, 43.76, 12.73]]}, {"q": "Why did Tom say, “Ouch!”?", "a": "The pit hit his tooth.", "segs": [[48.66, 65.05, 6.53], [3.98, 75.7, 27.76]]}, {"q": "What happened to Tom’s tooth?", "a": "His tooth fell out.", "segs": [[16.85, 86.34, 23.94], [3.98, 96.99, 37.91]]}]}, {"img": "pg16.jpg", "ratio": 1.3031, "qs": [{"q": "What is Bob’s job?", "a": "Bob’s job is to cook.", "segs": [[29.14, 33.33, 20.1], [3.98, 43.76, 8.59]]}, {"q": "Why is Pat sobbing?", "a": "Bob does not have corn on the cob.", "segs": [[3.98, 65.05, 46.26], [3.98, 75.7, 8.47]]}, {"q": "What is Bob going to do?", "a": "He will cook corn on the cob for Pat.", "segs": [[13.31, 96.99, 62.97]]}]}, {"img": "pg17.jpg", "ratio": 1.3031, "qs": [{"q": "What does the author have?", "a": "The author has many pets.", "segs": [[11.16, 33.33, 30.94]]}, {"q": "Who doesn’t the frog like?", "a": "The frog does not like the dog or the hog.", "segs": [[22.02, 65.05, 23.58], [3.98, 75.7, 44.18], [3.98, 86.34, 36.37]]}, {"q": "What does the frog like to do?", "a": "The frog likes to sit on his log.", "segs": [[3.98, 96.99, 51.15]]}]}, {"img": "pg18.jpg", "ratio": 1.3031, "qs": [{"q": "What does Bop like to do?", "a": "Bop likes to race.", "segs": [[9.87, 33.33, 41.68]]}, {"q": "Where does Bop need to hop to?", "a": "Bop needs to hop to the top.", "segs": [[3.98, 54.41, 39.67]]}, {"q": "What does Bop need to do to the balloon?", "a": "Bop will pop the balloon.", "segs": [[3.98, 86.34, 40.46], [3.98, 96.99, 11.19]]}]}, {"img": "pg19.jpg", "ratio": 1.3031, "qs": [{"q": "What does mum think is wrong with the girl?", "a": "Mum thinks the girl is sick.", "segs": [[9.87, 33.33, 43.27]]}, {"q": "What does the girl keep thinking?", "a": "The girl keeps thinking, “I am not!”", "segs": [[22.23, 43.76, 31.67], [3.98, 54.41, 27.16]]}, {"q": "How much soup does mum want the girl to have?", "a": "Mum wants her to have a little, not a lot.", "segs": [[40.49, 75.7, 13.41], [3.98, 86.34, 26.73]]}]}, {"img": "pg20.jpg", "ratio": 1.3031, "qs": [{"q": "What is the cub’s name?", "a": "The cub’s name is Bub.", "segs": [[35.51, 33.33, 15.41], [3.98, 43.76, 10.82]]}, {"q": "What does Bub like to do?", "a": "Bub likes the tub.", "segs": [[17.4, 43.76, 29.56]]}, {"q": "What happened at the end?", "a": "Bub the cub is clean in the tub.", "segs": [[3.98, 75.7, 29.16], [3.98, 86.34, 31.43]]}]}, {"img": "pg21.jpg", "ratio": 1.3031, "qs": [{"q": "What fell on the rug?", "a": "Her mug fell on the rug.", "segs": [[9.87, 33.33, 42.74], [3.98, 43.76, 6.48]]}, {"q": "Where were the bugs?", "a": "The bugs were under the rug.", "segs": [[3.98, 54.41, 48.07], [3.98, 65.05, 27.43]]}, {"q": "What else was under the rug?", "a": "There were slugs and her mug under the rug.", "segs": [[34.01, 65.05, 17.68], [3.98, 75.7, 41.38]]}]}, {"img": "pg22.jpg", "ratio": 1.3031, "qs": [{"q": "Who loves to run?", "a": "Max loves to run.", "segs": [[3.98, 43.76, 28.97]]}, {"q": "Who is Bun?", "a": "Bun is Max’s dog.", "segs": [[25.6, 65.05, 21.13], [3.98, 75.7, 6.83]]}, {"q": "Where do Max and Bun like to run?", "a": "They like to run in the sun.", "segs": [[3.98, 86.34, 47.54]]}]}, {"img": "pg23.jpg", "ratio": 1.3031, "qs": [{"q": "Where did they go?", "a": "They went to the ice cream hut.", "segs": [[3.98, 65.05, 53.23]]}, {"q": "What did Dad ask the boy to do?", "a": "Dad asked the boy to shut the car door.", "segs": [[3.98, 54.41, 45.09]]}, {"q": "What did the boy get on his ice cream?", "a": "The boy got nuts on his ice cream.", "segs": [[3.98, 75.7, 45.2]]}]}];
+  var COLORS=['#e5484d','#2f6fed','#1f9d55'];
+  var stage=document.getElementById('stage');
+  function fit(){ var s=Math.min(innerWidth/1280, innerHeight/720); stage.style.transform='scale('+s+')'; }
+  addEventListener('resize',fit); fit();
+  var cur=0, step=0, N=0;
+  function pad(n){return (n<10?'0':'')+n;}
+  function build(i, startStep){
+    cur=i; var s=DATA[i]; N=s.qs.length; step=startStep||0;
+    var P=document.getElementById('passage');
+    var h=Math.round(760/s.ratio); P.style.height=h+'px';
+    var html='<img src="'+s.img+'" alt="passage '+(i+1)+'">';
+    s.qs.forEach(function(q,k){
+      q.segs.forEach(function(g,j){
+        html+='<div class="hl" data-q="'+k+'" style="left:'+g[0]+'%;top:'+g[1]+'%;width:'+g[2]+'%;background:'+COLORS[k]+';transition-delay:'+(j*0.35)+'s"></div>';
+      });
+    });
+    P.innerHTML=html;
+    var qa='', dots='';
+    s.qs.forEach(function(q,k){
+      qa+='<div class="q"><h3>'+(k+1)+'. '+q.q+'</h3><div class="ans" data-q="'+k+'" style="color:'+COLORS[k]+'">'+q.a+'</div></div>';
+      dots+='<i></i>';
+    });
+    document.getElementById('qa').innerHTML=qa;
+    document.getElementById('dots').innerHTML=dots;
+    document.getElementById('pageno').textContent=pad(i+1)+' / '+DATA.length;
+    try{ history.replaceState(null,'','#'+(i+1)); }catch(e){}
+    render();
+  }
+  function render(){
+    [].forEach.call(document.querySelectorAll('[data-q]'),function(el){
+      el.classList.toggle('on', (+el.getAttribute('data-q'))<step);
+    });
+    [].forEach.call(document.querySelectorAll('#dots i'),function(d,k){ d.classList.toggle('on',k<step); });
+  }
+  function next(){ if(step<N){step++;render();} else if(cur<DATA.length-1){build(cur+1,0);} }
+  function prev(){ if(step>0){step--;render();} else if(cur>0){build(cur-1,DATA[cur-1].qs.length);} }
+  stage.addEventListener('click',next);
+  document.getElementById('home').addEventListener('click',function(e){e.stopPropagation();});
+  addEventListener('keydown',function(e){
+    var k=e.key;
+    if(k===' '||k==='Enter'||k==='ArrowRight'||k==='PageDown'){e.preventDefault();next();}
+    else if(k==='ArrowLeft'||k==='PageUp'){e.preventDefault();prev();}
+    else if(k==='ArrowDown'){e.preventDefault(); if(cur<DATA.length-1)build(cur+1,0);}
+    else if(k==='ArrowUp'){e.preventDefault(); if(cur>0)build(cur-1,0);}
+    else if(k==='r'||k==='R'){step=0;render();}
+    else if(k==='f'||k==='F'){ try{ var r=document.documentElement.requestFullscreen; if(r) r.call(document.documentElement).catch(function(){}); }catch(err){} }
+  });
+  var start=parseInt((location.hash||'').replace('#',''),10);
+  build(start>=1&&start<=DATA.length?start-1:0,0);
+})();
+</script>
+</body>
+</html>
