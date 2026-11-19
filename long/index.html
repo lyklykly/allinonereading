@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -51,19 +51,19 @@
 </head>
 <body class="view-list">
 <div id="list">
-  <div class="top"><a class="back" href="../">← 메인으로</a></div>
+  <div class="top"><a class="back" href="../">← Home</a></div>
   <h1>Long Vowels</h1>
   <p class="sub" id="count"></p>
   <div id="items"></div>
 </div>
 <div id="wrap"><div id="stage">
-  <a class="toList" id="toList" href="#list">☰ 제목 목록</a>
+  <a class="toList" id="toList" href="#list">☰ Title list</a>
   <div class="stitle" id="stitle"></div>
   <div class="pageno" id="pageno"></div>
   <div class="passage" id="passage"></div>
   <div class="qa" id="qa"></div>
   <div class="dots" id="dots"></div>
-  <div class="hint">클릭 · Space · → 다음 정답  |  ← 이전  |  ↑ ↓ 슬라이드 이동  |  L / Esc 제목 목록  |  R 처음부터  |  F 전체화면</div>
+  <div class="hint">Click · Space · → Next answer  |  ← Back  |  ↑ ↓ Change slide  |  L / Esc Title list  |  R Restart  |  F Fullscreen</div>
 </div></div>
 <script>
 (function(){
@@ -80,7 +80,7 @@
   var items='';
   DATA.forEach(function(s,i){ items+='<a href="#'+(i+1)+'"><span class="no">'+(i+1)+'</span><span>'+esc(s.title)+'</span></a>'; });
   document.getElementById('items').innerHTML=items;
-  document.getElementById('count').textContent=DATA.length+'개 지문 · 제목을 누르면 해당 슬라이드가 열려요.';
+  document.getElementById('count').textContent=DATA.length+' passages · Choose a title to open its slide.';
 
   function build(i, startStep){
     cur=i; var s=DATA[i]; N=s.qs.length; step=startStep||0;
