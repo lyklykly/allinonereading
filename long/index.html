@@ -5,13 +5,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Long Vowels - Read and Respond</title>
 <style>
-  :root { --bg:#f6f7f9; --ink:#1b1f27; --muted:#8a919c; }
+  :root { --bg:#f6f7f9; --ink:#1b1f27; --muted:#8a919c; --accent:#2f6fed; }
   * { box-sizing:border-box; margin:0; padding:0; }
-  html,body { height:100%; background:#111; overflow:hidden; font-family:"Nanum Gothic","Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif; }
+  html,body { height:100%; font-family:"Nanum Gothic","Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif; }
+  body.view-slide { background:#111; overflow:hidden; }
+  body.view-list { background:var(--bg); overflow:auto; }
+
+  /* ---------- title list ---------- */
+  #list { display:none; max-width:1100px; margin:0 auto; padding:34px 20px 50px; }
+  body.view-list #list { display:block; }
+  body.view-list #wrap { display:none; }
+  #list .top { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+  #list a.back { color:var(--muted); text-decoration:none; font-weight:700; font-size:15px; }
+  #list a.back:hover { color:var(--ink); }
+  #list h1 { font-size:clamp(26px,4.5vw,38px); font-weight:800; border-left:8px solid var(--accent); padding-left:14px; margin:10px 0 6px; line-height:1.2; }
+  #list p.sub { color:#6b7280; margin:0 0 26px 22px; font-size:15px; }
+  #items { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px; }
+  #items a { display:flex; align-items:center; gap:12px; background:#fff; border-radius:10px; padding:14px 16px; text-decoration:none; color:var(--ink); box-shadow:0 1px 6px rgba(0,0,0,.08); font-size:18px; font-weight:800; line-height:1.25; transition:transform .12s, box-shadow .12s; }
+  #items a:hover, #items a:focus-visible { transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,.14); outline:2px solid var(--accent); }
+  #items .no { flex:none; width:34px; height:34px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:800; }
+
+  /* ---------- slide ---------- */
   #wrap { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
   #stage { width:1280px; height:720px; background:var(--bg); position:relative; transform-origin:center center; flex:none; overflow:hidden; cursor:pointer; user-select:none; }
+  .toList { position:absolute; left:40px; top:22px; font-size:15px; font-weight:800; color:#555; text-decoration:none; background:#fff; border-radius:8px; padding:6px 12px; box-shadow:0 1px 5px rgba(0,0,0,.12); }
+  .toList:hover { color:var(--accent); }
+  .stitle { position:absolute; left:0; right:0; top:28px; text-align:center; font-size:16px; font-weight:700; color:var(--muted); pointer-events:none; }
   .pageno { position:absolute; right:40px; top:28px; font-size:16px; font-weight:700; color:var(--muted); letter-spacing:.04em; }
-  .badge { text-decoration:none; position:absolute; left:40px; top:26px; font-size:15px; font-weight:700; color:var(--muted); }
   .passage { position:absolute; left:30px; top:78px; width:760px; background:#fff; border-radius:6px; box-shadow:0 2px 14px rgba(0,0,0,.12); overflow:hidden; }
   .passage img { position:absolute; inset:0; width:100%; height:100%; display:block; }
   .hl { position:absolute; height:6px; border-radius:3px; transform:scaleX(0); transform-origin:left center; transition:transform .7s cubic-bezier(.3,.7,.2,1); }
@@ -24,34 +44,49 @@
   .ans.on { opacity:1; transform:none; }
   .ans::before { content:""; display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:10px; background:currentColor; vertical-align:middle; }
   .hint { position:absolute; left:0; right:0; bottom:10px; text-align:center; font-size:13px; color:#a2a8b2; }
-  .dots { position:absolute; left:820px; bottom:22px; display:flex; gap:8px; }
+  .dots { position:absolute; left:820px; bottom:40px; display:flex; gap:8px; }
   .dots i { width:9px; height:9px; border-radius:50%; background:#d3d7de; transition:background .3s; }
   .dots i.on { background:#555; }
 </style>
 </head>
-<body>
+<body class="view-list">
+<div id="list">
+  <div class="top"><a class="back" href="../">← 메인으로</a></div>
+  <h1>Long Vowels</h1>
+  <p class="sub" id="count"></p>
+  <div id="items"></div>
+</div>
 <div id="wrap"><div id="stage">
-  <a class="badge" id="home" href="../">← 메인 · Long Vowels</a>
+  <a class="toList" id="toList" href="#list">☰ 제목 목록</a>
+  <div class="stitle" id="stitle"></div>
   <div class="pageno" id="pageno"></div>
   <div class="passage" id="passage"></div>
   <div class="qa" id="qa"></div>
   <div class="dots" id="dots"></div>
-  <div class="hint">클릭 · Space · → 다음 정답  |  ← 이전  |  ↑ ↓ 슬라이드 이동  |  R 처음부터  |  F 전체화면</div>
+  <div class="hint">클릭 · Space · → 다음 정답  |  ← 이전  |  ↑ ↓ 슬라이드 이동  |  L / Esc 제목 목록  |  R 처음부터  |  F 전체화면</div>
 </div></div>
 <script>
 (function(){
-  var DATA=[{"img": "pg01.jpg", "ratio": 1.3031, "qs": [{"q": "What was the worm’s name?", "a": "The worm’s name was Wade.", "segs": [[10.6, 35.13, 37.32]]}, {"q": "What was Wade’s fate?", "a": "An apple was his fate.", "segs": [[20.03, 74.31, 37.27]]}, {"q": "What did Wade want instead of the apple?", "a": "He wanted a cake.", "segs": [[16.96, 84.1, 28.9]]}]}, {"img": "pg02.jpg", "ratio": 1.3031, "qs": [{"q": "Why was Gail sad?", "a": "She felt like she was too plain.", "segs": [[4.72, 44.92, 51.85]]}, {"q": "What did Gail do to her shell?", "a": "She stained her shell with paint.", "segs": [[35.8, 64.51, 55.33]]}, {"q": "At the end, why was Gail plain again?", "a": "The paint washed off.", "segs": [[67.66, 84.1, 16.23], [4.72, 93.9, 20.41]]}]}, {"img": "pg03.jpg", "ratio": 1.3031, "qs": [{"q": "What month was it in A Day to Play?", "a": "It was May.", "segs": [[10.6, 35.13, 43.24]]}, {"q": "What did Lily want?", "a": "Lily wanted to play outside.", "segs": [[56.43, 35.13, 5.9], [4.72, 44.92, 39.97]]}, {"q": "When Lily was inside, what did she play with?", "a": "She played with clay.", "segs": [[61.09, 74.31, 32.81], [4.72, 84.1, 28.27]]}]}, {"img": "pg04.jpg", "ratio": 1.3031, "qs": [{"q": "What is the setting of the story?", "a": "The boys were at the beach.", "segs": [[10.6, 36.64, 54.08], [4.72, 45.79, 30.89]]}, {"q": "What did the boys eat?", "a": "They had meat, peaches, and a treat! He gave them ice cream.", "segs": [[45.33, 54.95, 50.08], [4.72, 64.1, 52.07]]}, {"q": "What did the boys do together at the end?", "a": "The boys cleaned together.", "segs": [[20.44, 82.42, 44.18]]}]}, {"img": "pg05.jpg", "ratio": 1.3031, "qs": [{"q": "How many sheep are in the story?", "a": "There were three little sheep.", "segs": [[10.6, 34.67, 30.7]]}, {"q": "Where were the sheep going?", "a": "They were going to the shop to get cheese.", "segs": [[32.08, 44.46, 18.75], [4.72, 54.26, 55.31]]}, {"q": "Why did the sheep honk?", "a": "The jeep stopped, so the sheep honked.", "segs": [[4.72, 64.05, 77.36]]}]}, {"img": "pg06.jpg", "ratio": 1.3031, "qs": [{"q": "What is the meaning of the word grief?", "a": "Grief means feeling very sad.", "segs": [[10.6, 32.19, 63.1], [5.93, 41.48, 25.54]]}, {"q": "What did the thief leave behind?", "a": "The thief left a piece of food.", "segs": [[36.91, 50.63, 33.81], [4.72, 59.79, 32.66]]}, {"q": "What was the solution to the story?", "a": "The chief said he would collect more twigs and grass so she could make more baskets.", "segs": [[22.05, 78.1, 72.08], [4.72, 87.47, 60.91]]}]}, {"img": "pg07.jpg", "ratio": 1.2979, "qs": [{"q": "What two pets does Holly have?", "a": "She has a puppy and a bunny.", "segs": [[43.95, 31.3, 16.31], [4.72, 40.93, 32.02]]}, {"q": "What does her puppy do in the grass?", "a": "Her puppy runs quickly.", "segs": [[69.31, 69.77, 26.21], [4.72, 79.32, 11.71]]}, {"q": "Why are Holly’s pets happy?", "a": "They are happy to spend their sunny day outside.", "segs": [[68.99, 79.32, 27.15], [4.72, 88.86, 53.57], [4.72, 98.62, 13.0]]}]}, {"img": "pg08.jpg", "ratio": 1.3031, "qs": [{"q": "How many friends does the author have?", "a": "The author has five nice friends.", "segs": [[10.6, 35.13, 41.1]]}, {"q": "What are two things the friends like to do?", "a": "They ride their bikes and go down the slide.", "segs": [[19.44, 44.92, 42.65], [4.72, 54.72, 48.53]]}]}, {"img": "pg09.jpg", "ratio": 1.3031, "qs": [{"q": "When is there the brightest light?", "a": "During the day, the sun gives bright light.", "segs": [[49.84, 44.92, 10.93], [4.72, 54.72, 57.93]]}, {"q": "What is high in the sky at night?", "a": "The moon and stars are high in the sky.", "segs": [[52.69, 64.51, 6.53], [4.72, 74.31, 60.34]]}, {"q": "What do you like best, day or night?", "a": "I like the day best. / I like the night best.", "segs": []}]}, {"img": "pg10.jpg", "ratio": 1.3031, "qs": [{"q": "How did being shy make Ry feel?", "a": "It made her want to cry.", "segs": [[27.69, 50.68, 45.16]]}, {"q": "Who taught Ry to not be shy?", "a": "Dad taught Ry to not be shy.", "segs": [[19.79, 60.26, 53.23], [4.72, 70.05, 22.56]]}, {"q": "In what month did Ry stop being shy?", "a": "She was no longer shy by July.", "segs": [[37.94, 89.22, 52.74]]}]}, {"img": "pg11.jpg", "ratio": 1.3031, "qs": [{"q": "What is the problem in the story?", "a": "Someone had taken Mum’s pies.", "segs": [[12.36, 36.86, 43.19]]}, {"q": "What were the spies wearing?", "a": "The spies were wearing ties.", "segs": [[4.72, 62.63, 63.79]]}, {"q": "Where did the spies find the pies?", "a": "They found the pies in the refrigerator.", "segs": [[65.09, 79.66, 31.16], [4.72, 88.39, 27.22]]}]}, {"img": "pg12.jpg", "ratio": 1.3031, "qs": [{"q": "What was the problem in the story?", "a": "There was a hole in the road.", "segs": [[79.09, 54.72, 16.53], [4.72, 64.51, 70.98]]}, {"q": "Where was Joe going?", "a": "Joe was going to school.", "segs": [[10.6, 35.13, 53.38], [4.72, 44.92, 11.17]]}, {"q": "What did Joe smell?", "a": "He smelled smoke.", "segs": [[15.87, 54.72, 60.62]]}]}, {"img": "pg13.jpg", "ratio": 1.3031, "qs": [{"q": "At the beginning, where was the toad?", "a": "The toad was on a boat.", "segs": [[10.6, 35.13, 58.59]]}, {"q": "What did the toad want to know?", "a": "He wanted to see if he could float.", "segs": [[4.72, 44.92, 60.25]]}, {"q": "What did the toad do at the end?", "a": "He sat on the edge and went, “Croak, croak!”", "segs": [[36.92, 84.1, 55.95], [4.72, 93.9, 26.56]]}]}, {"img": "pg14.jpg", "ratio": 1.3031, "qs": [{"q": "What problem did Tim have?", "a": "He did not know how to make his bud grow.", "segs": [[38.17, 35.13, 40.23], [4.72, 44.92, 23.24]]}, {"q": "What did the bud need to grow?", "a": "It needed water and sun.", "segs": [[55.22, 44.92, 24.45], [4.72, 54.72, 15.42]]}, {"q": "How did Tim feel at the end?", "a": "Tim was so happy.", "segs": [[4.72, 84.1, 31.1]]}]}, {"img": "pg15.jpg", "ratio": 1.3031, "qs": [{"q": "When did Luke get a pet?", "a": "Luke got a pet in June.", "segs": [[10.6, 35.13, 50.43]]}, {"q": "What problem did Luke have with Dude?", "a": "Sometimes Dude can be rude.", "segs": [[20.28, 54.72, 41.13], [4.72, 64.51, 8.6]]}, {"q": "What does the author think about Luke?", "a": "The author thinks Luke is so lucky to have a cute pet.", "segs": [[61.4, 84.1, 31.83], [4.72, 93.9, 27.77]]}]}, {"img": "pg16.jpg", "ratio": 1.3031, "qs": [{"q": "Who is looking for a clue?", "a": "Sam is looking for a clue.", "segs": [[47.05, 55.38, 14.24], [4.72, 65.17, 30.25]]}, {"q": "What was stuck to Sam’s shoe?", "a": "A blue tissue was stuck to Sam’s shoe.", "segs": [[20.64, 35.79, 45.95], [4.72, 45.58, 19.85]]}, {"q": "Why was it stuck?", "a": "Sam had walked on glue.", "segs": [[43.6, 84.76, 41.84]]}]}, {"img": "pg17.jpg", "ratio": 1.3031, "qs": [{"q": "What was in the nest?", "a": "There were a few baby birds in the nest.", "segs": [[15.65, 45.58, 42.03]]}, {"q": "What did the birds chew?", "a": "They chewed worms.", "segs": [[19.51, 65.17, 55.39]]}, {"q": "Why was Drew sad?", "a": "The birds were gone. He knew they flew away.", "segs": [[75.6, 74.97, 14.19], [4.72, 84.76, 90.98], [4.72, 94.56, 9.5]]}]}];
+  var DATA=[{"img": "pg01.jpg", "ratio": 1.3031, "qs": [{"q": "What was the worm’s name?", "a": "The worm’s name was Wade.", "segs": [[10.6, 35.13, 37.32]]}, {"q": "What was Wade’s fate?", "a": "An apple was his fate.", "segs": [[20.03, 74.31, 37.27]]}, {"q": "What did Wade want instead of the apple?", "a": "He wanted a cake.", "segs": [[16.96, 84.1, 28.9]]}], "title": "The Maze"}, {"img": "pg02.jpg", "ratio": 1.3031, "qs": [{"q": "Why was Gail sad?", "a": "She felt like she was too plain.", "segs": [[4.72, 44.92, 51.85]]}, {"q": "What did Gail do to her shell?", "a": "She stained her shell with paint.", "segs": [[35.8, 64.51, 55.33]]}, {"q": "At the end, why was Gail plain again?", "a": "The paint washed off.", "segs": [[67.66, 84.1, 16.23], [4.72, 93.9, 20.41]]}], "title": "The Snail"}, {"img": "pg03.jpg", "ratio": 1.3031, "qs": [{"q": "What month was it in A Day to Play?", "a": "It was May.", "segs": [[10.6, 35.13, 43.24]]}, {"q": "What did Lily want?", "a": "Lily wanted to play outside.", "segs": [[56.43, 35.13, 5.9], [4.72, 44.92, 39.97]]}, {"q": "When Lily was inside, what did she play with?", "a": "She played with clay.", "segs": [[61.09, 74.31, 32.81], [4.72, 84.1, 28.27]]}], "title": "A Day to Play"}, {"img": "pg04.jpg", "ratio": 1.3031, "qs": [{"q": "What is the setting of the story?", "a": "The boys were at the beach.", "segs": [[10.6, 36.64, 54.08], [4.72, 45.79, 30.89]]}, {"q": "What did the boys eat?", "a": "They had meat, peaches, and a treat! He gave them ice cream.", "segs": [[45.33, 54.95, 50.08], [4.72, 64.1, 52.07]]}, {"q": "What did the boys do together at the end?", "a": "The boys cleaned together.", "segs": [[20.44, 82.42, 44.18]]}], "title": "A Real Team"}, {"img": "pg05.jpg", "ratio": 1.3031, "qs": [{"q": "How many sheep are in the story?", "a": "There were three little sheep.", "segs": [[10.6, 34.67, 30.7]]}, {"q": "Where were the sheep going?", "a": "They were going to the shop to get cheese.", "segs": [[32.08, 44.46, 18.75], [4.72, 54.26, 55.31]]}, {"q": "Why did the sheep honk?", "a": "The jeep stopped, so the sheep honked.", "segs": [[4.72, 64.05, 77.36]]}], "title": "Sheep in a Jeep"}, {"img": "pg06.jpg", "ratio": 1.3031, "qs": [{"q": "What is the meaning of the word grief?", "a": "Grief means feeling very sad.", "segs": [[10.6, 32.19, 63.1], [5.93, 41.48, 25.54]]}, {"q": "What did the thief leave behind?", "a": "The thief left a piece of food.", "segs": [[36.91, 50.63, 33.81], [4.72, 59.79, 32.66]]}, {"q": "What was the solution to the story?", "a": "The chief said he would collect more twigs and grass so she could make more baskets.", "segs": [[22.05, 78.1, 72.08], [4.72, 87.47, 60.91]]}], "title": "The Chief’s Niece"}, {"img": "pg07.jpg", "ratio": 1.2979, "qs": [{"q": "What two pets does Holly have?", "a": "She has a puppy and a bunny.", "segs": [[43.95, 31.3, 16.31], [4.72, 40.93, 32.02]]}, {"q": "What does her puppy do in the grass?", "a": "Her puppy runs quickly.", "segs": [[69.31, 69.77, 26.21], [4.72, 79.32, 11.71]]}, {"q": "Why are Holly’s pets happy?", "a": "They are happy to spend their sunny day outside.", "segs": [[68.99, 79.32, 27.15], [4.72, 88.86, 53.57], [4.72, 98.62, 13.0]]}], "title": "Holly’s Happy Pets"}, {"img": "pg08.jpg", "ratio": 1.3031, "qs": [{"q": "How many friends does the author have?", "a": "The author has five nice friends.", "segs": [[10.6, 35.13, 41.1]]}, {"q": "What are two things the friends like to do?", "a": "They ride their bikes and go down the slide.", "segs": [[19.44, 44.92, 42.65], [4.72, 54.72, 48.53]]}], "title": "My Five Friends"}, {"img": "pg09.jpg", "ratio": 1.3031, "qs": [{"q": "When is there the brightest light?", "a": "During the day, the sun gives bright light.", "segs": [[49.84, 44.92, 10.93], [4.72, 54.72, 57.93]]}, {"q": "What is high in the sky at night?", "a": "The moon and stars are high in the sky.", "segs": [[52.69, 64.51, 6.53], [4.72, 74.31, 60.34]]}, {"q": "What do you like best, day or night?", "a": "I like the day best. / I like the night best.", "segs": []}], "title": "Day and Night"}, {"img": "pg10.jpg", "ratio": 1.3031, "qs": [{"q": "How did being shy make Ry feel?", "a": "It made her want to cry.", "segs": [[27.69, 50.68, 45.16]]}, {"q": "Who taught Ry to not be shy?", "a": "Dad taught Ry to not be shy.", "segs": [[19.79, 60.26, 53.23], [4.72, 70.05, 22.56]]}, {"q": "In what month did Ry stop being shy?", "a": "She was no longer shy by July.", "segs": [[37.94, 89.22, 52.74]]}], "title": "Why So Shy?"}, {"img": "pg11.jpg", "ratio": 1.3031, "qs": [{"q": "What is the problem in the story?", "a": "Someone had taken Mum’s pies.", "segs": [[12.36, 36.86, 43.19]]}, {"q": "What were the spies wearing?", "a": "The spies were wearing ties.", "segs": [[4.72, 62.63, 63.79]]}, {"q": "Where did the spies find the pies?", "a": "They found the pies in the refrigerator.", "segs": [[65.09, 79.66, 31.16], [4.72, 88.39, 27.22]]}], "title": "The Spies in Ties"}, {"img": "pg12.jpg", "ratio": 1.3031, "qs": [{"q": "What was the problem in the story?", "a": "There was a hole in the road.", "segs": [[79.09, 54.72, 16.53], [4.72, 64.51, 70.98]]}, {"q": "Where was Joe going?", "a": "Joe was going to school.", "segs": [[10.6, 35.13, 53.38], [4.72, 44.92, 11.17]]}, {"q": "What did Joe smell?", "a": "He smelled smoke.", "segs": [[15.87, 54.72, 60.62]]}], "title": "Joe Drove"}, {"img": "pg13.jpg", "ratio": 1.3031, "qs": [{"q": "At the beginning, where was the toad?", "a": "The toad was on a boat.", "segs": [[10.6, 35.13, 58.59]]}, {"q": "What did the toad want to know?", "a": "He wanted to see if he could float.", "segs": [[4.72, 44.92, 60.25]]}, {"q": "What did the toad do at the end?", "a": "He sat on the edge and went, “Croak, croak!”", "segs": [[36.92, 84.1, 55.95], [4.72, 93.9, 26.56]]}], "title": "The Toad"}, {"img": "pg14.jpg", "ratio": 1.3031, "qs": [{"q": "What problem did Tim have?", "a": "He did not know how to make his bud grow.", "segs": [[38.17, 35.13, 40.23], [4.72, 44.92, 23.24]]}, {"q": "What did the bud need to grow?", "a": "It needed water and sun.", "segs": [[55.22, 44.92, 24.45], [4.72, 54.72, 15.42]]}, {"q": "How did Tim feel at the end?", "a": "Tim was so happy.", "segs": [[4.72, 84.1, 31.1]]}], "title": "The Bud"}, {"img": "pg15.jpg", "ratio": 1.3031, "qs": [{"q": "When did Luke get a pet?", "a": "Luke got a pet in June.", "segs": [[10.6, 35.13, 50.43]]}, {"q": "What problem did Luke have with Dude?", "a": "Sometimes Dude can be rude.", "segs": [[20.28, 54.72, 41.13], [4.72, 64.51, 8.6]]}, {"q": "What does the author think about Luke?", "a": "The author thinks Luke is so lucky to have a cute pet.", "segs": [[61.4, 84.1, 31.83], [4.72, 93.9, 27.77]]}], "title": "The Cute Pet"}, {"img": "pg16.jpg", "ratio": 1.3031, "qs": [{"q": "Who is looking for a clue?", "a": "Sam is looking for a clue.", "segs": [[47.05, 55.38, 14.24], [4.72, 65.17, 30.25]]}, {"q": "What was stuck to Sam’s shoe?", "a": "A blue tissue was stuck to Sam’s shoe.", "segs": [[20.64, 35.79, 45.95], [4.72, 45.58, 19.85]]}, {"q": "Why was it stuck?", "a": "Sam had walked on glue.", "segs": [[43.6, 84.76, 41.84]]}], "title": "The Clue"}, {"img": "pg17.jpg", "ratio": 1.3031, "qs": [{"q": "What was in the nest?", "a": "There were a few baby birds in the nest.", "segs": [[15.65, 45.58, 42.03]]}, {"q": "What did the birds chew?", "a": "They chewed worms.", "segs": [[19.51, 65.17, 55.39]]}, {"q": "Why was Drew sad?", "a": "The birds were gone. He knew they flew away.", "segs": [[75.6, 74.97, 14.19], [4.72, 84.76, 90.98], [4.72, 94.56, 9.5]]}], "title": "They Flew"}];
   var COLORS=['#e5484d','#2f6fed','#1f9d55'];
   var stage=document.getElementById('stage');
   function fit(){ var s=Math.min(innerWidth/1280, innerHeight/720); stage.style.transform='scale('+s+')'; }
   addEventListener('resize',fit); fit();
-  var cur=0, step=0, N=0;
+  var cur=0, step=0, N=0, pending=0;
   function pad(n){return (n<10?'0':'')+n;}
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+
+  // title list
+  var items='';
+  DATA.forEach(function(s,i){ items+='<a href="#'+(i+1)+'"><span class="no">'+(i+1)+'</span><span>'+esc(s.title)+'</span></a>'; });
+  document.getElementById('items').innerHTML=items;
+  document.getElementById('count').textContent=DATA.length+'개 지문 · 제목을 누르면 해당 슬라이드가 열려요.';
+
   function build(i, startStep){
     cur=i; var s=DATA[i]; N=s.qs.length; step=startStep||0;
     var P=document.getElementById('passage');
-    var h=Math.round(760/s.ratio); P.style.height=h+'px';
-    var html='<img src="'+s.img+'" alt="passage '+(i+1)+'">';
+    P.style.height=Math.round(760/s.ratio)+'px';
+    var html='<img src="'+s.img+'" alt="'+esc(s.title)+'">';
     s.qs.forEach(function(q,k){
       q.segs.forEach(function(g,j){
         html+='<div class="hl" data-q="'+k+'" style="left:'+g[0]+'%;top:'+g[1]+'%;width:'+g[2]+'%;background:'+COLORS[k]+';transition-delay:'+(j*0.35)+'s"></div>';
@@ -66,7 +101,8 @@
     document.getElementById('qa').innerHTML=qa;
     document.getElementById('dots').innerHTML=dots;
     document.getElementById('pageno').textContent=pad(i+1)+' / '+DATA.length;
-    try{ history.replaceState(null,'','#'+(i+1)); }catch(e){}
+    document.getElementById('stitle').textContent=s.title;
+    document.title=s.title+' - Long Vowels';
     render();
   }
   function render(){
@@ -75,21 +111,36 @@
     });
     [].forEach.call(document.querySelectorAll('#dots i'),function(d,k){ d.classList.toggle('on',k<step); });
   }
-  function next(){ if(step<N){step++;render();} else if(cur<DATA.length-1){build(cur+1,0);} }
-  function prev(){ if(step>0){step--;render();} else if(cur>0){build(cur-1,DATA[cur-1].qs.length);} }
+  function route(){
+    var h=(location.hash||'').replace('#','');
+    var n=parseInt(h,10);
+    if(n>=1&&n<=DATA.length){
+      document.body.className='view-slide';
+      build(n-1,pending); pending=0; fit();
+    } else {
+      document.body.className='view-list';
+      document.title='Long Vowels - Read and Respond';
+      window.scrollTo(0,0);
+    }
+  }
+  function go(i,startStep){ pending=startStep||0; if(location.hash==='#'+(i+1)){ build(i,pending); pending=0; } else location.hash='#'+(i+1); }
+  function next(){ if(step<N){step++;render();} else if(cur<DATA.length-1){go(cur+1,0);} }
+  function prev(){ if(step>0){step--;render();} else if(cur>0){go(cur-1,DATA[cur-1].qs.length);} }
   stage.addEventListener('click',next);
-  document.getElementById('home').addEventListener('click',function(e){e.stopPropagation();});
+  document.getElementById('toList').addEventListener('click',function(e){e.stopPropagation();});
+  addEventListener('hashchange',route);
   addEventListener('keydown',function(e){
+    if(document.body.className!=='view-slide') return;
     var k=e.key;
     if(k===' '||k==='Enter'||k==='ArrowRight'||k==='PageDown'){e.preventDefault();next();}
     else if(k==='ArrowLeft'||k==='PageUp'){e.preventDefault();prev();}
-    else if(k==='ArrowDown'){e.preventDefault(); if(cur<DATA.length-1)build(cur+1,0);}
-    else if(k==='ArrowUp'){e.preventDefault(); if(cur>0)build(cur-1,0);}
+    else if(k==='ArrowDown'){e.preventDefault(); if(cur<DATA.length-1)go(cur+1,0);}
+    else if(k==='ArrowUp'){e.preventDefault(); if(cur>0)go(cur-1,0);}
     else if(k==='r'||k==='R'){step=0;render();}
+    else if(k==='l'||k==='L'||k==='Escape'){location.hash='#list';}
     else if(k==='f'||k==='F'){ try{ var r=document.documentElement.requestFullscreen; if(r) r.call(document.documentElement).catch(function(){}); }catch(err){} }
   });
-  var start=parseInt((location.hash||'').replace('#',''),10);
-  build(start>=1&&start<=DATA.length?start-1:0,0);
+  route();
 })();
 </script>
 </body>

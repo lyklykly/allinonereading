@@ -3,15 +3,35 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Diphthongs & R-Controlled Vowels - Read and Respond</title>
+<title>Diphthongs &amp; R-Controlled Vowels - Read and Respond</title>
 <style>
-  :root { --bg:#f6f7f9; --ink:#1b1f27; --muted:#8a919c; }
+  :root { --bg:#f6f7f9; --ink:#1b1f27; --muted:#8a919c; --accent:#1f9d55; }
   * { box-sizing:border-box; margin:0; padding:0; }
-  html,body { height:100%; background:#111; overflow:hidden; font-family:"Nanum Gothic","Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif; }
+  html,body { height:100%; font-family:"Nanum Gothic","Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif; }
+  body.view-slide { background:#111; overflow:hidden; }
+  body.view-list { background:var(--bg); overflow:auto; }
+
+  /* ---------- title list ---------- */
+  #list { display:none; max-width:1100px; margin:0 auto; padding:34px 20px 50px; }
+  body.view-list #list { display:block; }
+  body.view-list #wrap { display:none; }
+  #list .top { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
+  #list a.back { color:var(--muted); text-decoration:none; font-weight:700; font-size:15px; }
+  #list a.back:hover { color:var(--ink); }
+  #list h1 { font-size:clamp(26px,4.5vw,38px); font-weight:800; border-left:8px solid var(--accent); padding-left:14px; margin:10px 0 6px; line-height:1.2; }
+  #list p.sub { color:#6b7280; margin:0 0 26px 22px; font-size:15px; }
+  #items { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px; }
+  #items a { display:flex; align-items:center; gap:12px; background:#fff; border-radius:10px; padding:14px 16px; text-decoration:none; color:var(--ink); box-shadow:0 1px 6px rgba(0,0,0,.08); font-size:18px; font-weight:800; line-height:1.25; transition:transform .12s, box-shadow .12s; }
+  #items a:hover, #items a:focus-visible { transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,.14); outline:2px solid var(--accent); }
+  #items .no { flex:none; width:34px; height:34px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:800; }
+
+  /* ---------- slide ---------- */
   #wrap { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
   #stage { width:1280px; height:720px; background:var(--bg); position:relative; transform-origin:center center; flex:none; overflow:hidden; cursor:pointer; user-select:none; }
+  .toList { position:absolute; left:40px; top:22px; font-size:15px; font-weight:800; color:#555; text-decoration:none; background:#fff; border-radius:8px; padding:6px 12px; box-shadow:0 1px 5px rgba(0,0,0,.12); }
+  .toList:hover { color:var(--accent); }
+  .stitle { position:absolute; left:0; right:0; top:28px; text-align:center; font-size:16px; font-weight:700; color:var(--muted); pointer-events:none; }
   .pageno { position:absolute; right:40px; top:28px; font-size:16px; font-weight:700; color:var(--muted); letter-spacing:.04em; }
-  .badge { text-decoration:none; position:absolute; left:40px; top:26px; font-size:15px; font-weight:700; color:var(--muted); }
   .passage { position:absolute; left:30px; top:78px; width:760px; background:#fff; border-radius:6px; box-shadow:0 2px 14px rgba(0,0,0,.12); overflow:hidden; }
   .passage img { position:absolute; inset:0; width:100%; height:100%; display:block; }
   .hl { position:absolute; height:6px; border-radius:3px; transform:scaleX(0); transform-origin:left center; transition:transform .7s cubic-bezier(.3,.7,.2,1); }
@@ -24,34 +44,49 @@
   .ans.on { opacity:1; transform:none; }
   .ans::before { content:""; display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:10px; background:currentColor; vertical-align:middle; }
   .hint { position:absolute; left:0; right:0; bottom:10px; text-align:center; font-size:13px; color:#a2a8b2; }
-  .dots { position:absolute; left:820px; bottom:22px; display:flex; gap:8px; }
+  .dots { position:absolute; left:820px; bottom:40px; display:flex; gap:8px; }
   .dots i { width:9px; height:9px; border-radius:50%; background:#d3d7de; transition:background .3s; }
   .dots i.on { background:#555; }
 </style>
 </head>
-<body>
+<body class="view-list">
+<div id="list">
+  <div class="top"><a class="back" href="../">← 메인으로</a></div>
+  <h1>Diphthongs &amp; R-Controlled Vowels</h1>
+  <p class="sub" id="count"></p>
+  <div id="items"></div>
+</div>
 <div id="wrap"><div id="stage">
-  <a class="badge" id="home" href="../">← 메인 · Diphthongs & R-Controlled Vowels</a>
+  <a class="toList" id="toList" href="#list">☰ 제목 목록</a>
+  <div class="stitle" id="stitle"></div>
   <div class="pageno" id="pageno"></div>
   <div class="passage" id="passage"></div>
   <div class="qa" id="qa"></div>
   <div class="dots" id="dots"></div>
-  <div class="hint">클릭 · Space · → 다음 정답  |  ← 이전  |  ↑ ↓ 슬라이드 이동  |  R 처음부터  |  F 전체화면</div>
+  <div class="hint">클릭 · Space · → 다음 정답  |  ← 이전  |  ↑ ↓ 슬라이드 이동  |  L / Esc 제목 목록  |  R 처음부터  |  F 전체화면</div>
 </div></div>
 <script>
 (function(){
-  var DATA=[{"img": "pg01.jpg", "ratio": 1.3031, "qs": [{"q": "Where did they go shopping?", "a": "They went shopping at the mall.", "segs": [[10.03, 35.88, 52.06]]}, {"q": "What describing words did the author use?", "a": "The author used big, small, short, and tall.", "segs": [[29.49, 55.46, 37.85], [4.14, 65.26, 86.27], [4.14, 75.05, 38.1]]}, {"q": "What did he buy at the mall?", "a": "He bought sidewalk chalk.", "segs": [[55.88, 84.85, 40.09]]}]}, {"img": "pg02.jpg", "ratio": 1.3031, "qs": [{"q": "How did the text describe the sauce?", "a": "The sauce was thick and red.", "segs": [[22.4, 40.07, 34.17], [3.66, 49.44, 13.59]]}, {"q": "What did she use her fork to do?", "a": "She used her fork to launch the food.", "segs": [[57.78, 59.02, 34.77], [3.66, 68.6, 37.69]]}, {"q": "What happened at the end?", "a": "They got caught.", "segs": [[47.02, 87.55, 39.91], [3.66, 96.92, 11.8]]}]}, {"img": "pg03.jpg", "ratio": 1.3031, "qs": [{"q": "What can the author’s sister do?", "a": "She can crawl.", "segs": [[10.6, 34.42, 44.09], [4.72, 43.25, 10.05]]}, {"q": "Where does she crawl?", "a": "She crawls across the lawn and inside the house.", "segs": [[44.13, 51.98, 18.5], [4.72, 60.92, 59.28], [4.72, 69.65, 17.14]]}, {"q": "Why does he want his sister to be careful?", "a": "She goes everywhere and grabs everything.", "segs": [[17.32, 43.25, 44.68], [4.72, 51.98, 36.86]]}]}, {"img": "pg04.jpg", "ratio": 1.3031, "qs": [{"q": "How does the author describe moths?", "a": "Moths look small and soft.", "segs": [[62.14, 35.13, 8.57], [4.72, 44.92, 38.33]]}, {"q": "Where do moths like to go?", "a": "Moths like to be near cloths.", "segs": [[45.64, 44.92, 21.85], [4.72, 54.72, 25.11]]}, {"q": "What can you do to get rid of moths?", "a": "You can toss in some mothballs.", "segs": [[59.84, 64.51, 36.01], [4.72, 74.31, 65.77]]}]}, {"img": "pg05.jpg", "ratio": 1.3031, "qs": [{"q": "What setting should the oven be on?", "a": "The oven should be on “broil.”", "segs": [[28.11, 43.1, 32.96], [4.72, 51.83, 11.27]]}, {"q": "What should you use to cover the pan?", "a": "Use foil to cover the pan.", "segs": [[11.87, 69.29, 38.43]]}, {"q": "Why does the author say, “Make some noise?”", "a": "Because it is time to eat sweet potato chips!", "segs": [[60.46, 86.54, 28.13], [4.72, 95.27, 69.25]]}]}, {"img": "pg06.jpg", "ratio": 1.3031, "qs": [{"q": "Why did she want to catch a fish?", "a": "She wanted to cook it.", "segs": [[17.86, 43.39, 31.04], [4.72, 52.33, 24.67]]}, {"q": "What did she put on the hook?", "a": "She put the bait on the hook.", "segs": [[42.93, 61.28, 8.96], [4.72, 70.22, 35.21]]}, {"q": "What happened to the bait?", "a": "The fish took the bait off the hook.", "segs": [[49.48, 88.32, 47.09], [4.72, 97.26, 15.57]]}]}, {"img": "pg07.jpg", "ratio": 1.3031, "qs": [{"q": "Who took a trip to the zoo?", "a": "The author’s school and friends from another school took a trip.", "segs": [[10.6, 35.13, 48.8], [4.72, 44.92, 52.77], [4.72, 54.72, 28.57]]}, {"q": "What animals did they feed?", "a": "They fed the elephants and the giraffes.", "segs": [[35.87, 54.72, 25.2], [4.72, 64.51, 52.79], [4.72, 74.31, 38.04]]}, {"q": "How did the author feel after going to the zoo?", "a": "The zoo put the author in a great mood.", "segs": [[35.57, 84.1, 56.95]]}]}, {"img": "pg08.jpg", "ratio": 1.3031, "qs": [{"q": "What is the mouse proud of?", "a": "The mouse is proud of her house.", "segs": [[4.72, 35.13, 51.97]]}, {"q": "What is inside the mouse’s house?", "a": "A couch, a round table, and a TV.", "segs": [[35.01, 44.92, 26.1], [4.72, 54.72, 59.15], [4.72, 64.51, 36.74]]}, {"q": "What does the mouse say about her garden?", "a": "Her garden is ready to sprout.", "segs": [[53.09, 74.31, 5.28], [4.72, 84.1, 45.64]]}]}, {"img": "pg09.jpg", "ratio": 1.3031, "qs": [{"q": "What is wrong with the girl?", "a": "She has a bad cough.", "segs": [[10.6, 34.39, 49.59]]}, {"q": "What does mum think she ought to do?", "a": "She ought to drink a lot of water.", "segs": [[4.72, 43.1, 59.7]]}, {"q": "What is one thing mum bought the girl?", "a": "Mum bought cough drops, water, and medicine.", "segs": [[11.87, 60.56, 51.35], [4.72, 69.29, 22.04]]}]}, {"img": "pg10.jpg", "ratio": 1.3031, "qs": [{"q": "What can owls do with their heads?", "a": "Owls can turn their heads.", "segs": [[58.2, 35.13, 8.22], [4.72, 44.92, 48.96]]}, {"q": "What colour is the owl?", "a": "The owl has brown feathers.", "segs": [[4.72, 54.72, 48.09]]}, {"q": "What type of sound do owls make?", "a": "Owls hoot.", "segs": [[83.81, 84.1, 8.09], [4.72, 93.9, 8.2]]}]}, {"img": "pg11.jpg", "ratio": 1.3031, "qs": [{"q": "Why did Roy get presents?", "a": "Roy had a birthday.", "segs": [[10.6, 35.13, 40.67]]}, {"q": "What is the best toy Roy got?", "a": "The best toy Roy got was an iPod.", "segs": [[44.07, 44.92, 15.34], [4.72, 54.72, 39.57]]}, {"q": "What does the author want?", "a": "The author wants an iPod.", "segs": [[55.87, 84.1, 1.87], [4.72, 93.9, 51.28]]}]}, {"img": "pg12.jpg", "ratio": 1.3031, "qs": [{"q": "What was the first thing they looked at?", "a": "They looked at the barn first.", "segs": [[62.98, 51.65, 26.97], [3.93, 60.59, 47.12]]}, {"q": "How big was the yard?", "a": "The yard was as big as a park.", "segs": [[90.38, 69.53, 3.26], [3.93, 78.69, 36.46]]}, {"q": "Why do you think they felt smart?", "a": "They learned how to take care of the animals.", "segs": [[42.98, 78.69, 51.41], [3.93, 87.63, 34.73]]}]}, {"img": "pg13.jpg", "ratio": 1.3031, "qs": [{"q": "What are the girls’ names?", "a": "Their names are Claire and Blair.", "segs": [[9.81, 33.72, 47.13]]}, {"q": "What do Blair and Claire have that is the same?", "a": "They have fair skin and the same pair of shoes.", "segs": [[36.42, 44.02, 25.99], [3.93, 54.66, 60.46], [3.93, 65.1, 49.28]]}, {"q": "What does pair mean?", "a": "A pair means two that go together, like Claire and Blair.", "segs": [[86.73, 85.96, 8.44], [3.93, 96.4, 59.88]]}]}, {"img": "pg14.jpg", "ratio": 1.3031, "qs": [{"q": "What shape is Mare?", "a": "Mare is a square.", "segs": [[44.45, 36.16, 11.67], [4.72, 45.95, 12.48]]}, {"q": "What shape is Mare’s brother?", "a": "Her brother is a circle.", "segs": [[19.79, 45.95, 38.31]]}, {"q": "What does Mare have to do?", "a": "She has to share her toys.", "segs": [[69.23, 75.34, 27.52], [4.72, 85.13, 29.44]]}]}, {"img": "pg15.jpg", "ratio": 1.3031, "qs": [{"q": "Where are germs?", "a": "Germs are everywhere.", "segs": [[9.87, 36.55, 41.24]]}, {"q": "What is one way to get rid of germs?", "a": "Wash your hands with soap.", "segs": [[19.49, 75.73, 68.86]]}, {"q": "What can you say while getting hand sanitizer?", "a": "“One pump per person!”", "segs": [[71.48, 85.53, 18.82], [3.98, 95.32, 21.47]]}]}, {"img": "pg16.jpg", "ratio": 1.3031, "qs": [{"q": "Where was Grandpa?", "a": "Grandpa was at the author’s house.", "segs": [[10.6, 34.3, 45.3]]}, {"q": "What is something Grandpa said?", "a": "“I love you my dear.”", "segs": [[51.31, 60.71, 18.3], [4.72, 69.65, 14.67]]}, {"q": "Why was Grandpa saying these things?", "a": "He said she would have a great year and had nothing to fear.", "segs": [[21.94, 69.65, 73.17], [4.72, 78.38, 43.29]]}]}, {"img": "pg17.jpg", "ratio": 1.3031, "qs": [{"q": "What grade is Mirna in?", "a": "Mirna is in third grade.", "segs": [[35.42, 34.3, 38.75]]}, {"q": "What did Mirna get that she was proud of?", "a": "She got a new skirt.", "segs": [[4.72, 43.03, 33.9]]}, {"q": "How did Mirna’s skirt get dirty?", "a": "A bird flew by and dropped dirt on her skirt.", "segs": [[49.3, 69.65, 46.97], [4.72, 78.38, 28.34]]}]}, {"img": "pg18.jpg", "ratio": 1.3031, "qs": [{"q": "Who is telling the story?", "a": "The person Irelyn hired to fix her tire is telling the story.", "segs": [[42.98, 51.04, 6.15], [3.41, 60.84, 41.37]]}, {"q": "Why did Irelyn call him?", "a": "She got a flat tire.", "segs": [[23.49, 41.25, 21.84], [3.41, 51.04, 36.97]]}, {"q": "What did he do after he put out the fire?", "a": "He put on a new tire.", "segs": [[78.04, 80.43, 13.09], [3.41, 90.22, 75.84]]}]}, {"img": "pg19.jpg", "ratio": 1.3031, "qs": [{"q": "What is the horse’s name?", "a": "The horse’s name is Borris.", "segs": [[36.26, 34.42, 32.09]]}, {"q": "What did he say about Borris’ size?", "a": "He is short because he is still growing.", "segs": [[48.01, 51.98, 19.09], [4.72, 60.92, 64.04]]}, {"q": "Where will he ride Borris?", "a": "He will ride Borris in the parade.", "segs": [[66.35, 87.53, 25.14], [4.72, 96.26, 43.29]]}]}, {"img": "pg20.jpg", "ratio": 1.3031, "qs": [{"q": "Where was the field where they played?", "a": "The field was near the shore.", "segs": [[28.5, 43.03, 23.18], [3.51, 51.98, 26.09]]}, {"q": "What did he do when he played?", "a": "He scored a goal.", "segs": [[74.75, 78.38, 18.04], [3.51, 87.32, 7.51]]}, {"q": "How did he feel after the game?", "a": "He felt sore.", "segs": [[15.82, 96.26, 52.74]]}]}, {"img": "pg21.jpg", "ratio": 1.3031, "qs": [{"q": "Where did they go to play golf?", "a": "They went to the golf course.", "segs": [[4.72, 61.28, 52.14]]}, {"q": "What happened at the fourth hole?", "a": "He was ready for a break.", "segs": [[4.72, 70.22, 83.04]]}, {"q": "What did dad tell the boy?", "a": "Dad said, “Just do your best and have fun!”", "segs": [[4.72, 88.32, 57.05]]}]}, {"img": "pg22.jpg", "ratio": 1.3031, "qs": [{"q": "What made the class safe?", "a": "Huge clear boards made the class safe.", "segs": [[40.45, 60.14, 52.18], [3.84, 69.08, 47.38]]}, {"q": "What sound did the lions make?", "a": "The lions roared.", "segs": [[52.52, 69.08, 37.18], [3.84, 78.23, 24.18]]}, {"q": "How did the author describe the lion’s mane?", "a": "It was coarse.", "segs": [[16.18, 87.18, 25.02]]}]}, {"img": "pg23.jpg", "ratio": 1.3031, "qs": [{"q": "What happened to the author’s finger?", "a": "He burned his finger.", "segs": [[50.13, 60.83, 33.4]]}, {"q": "Who helped the author?", "a": "A nurse helped him.", "segs": [[45.56, 69.56, 31.69]]}, {"q": "Where did they go after the doctor?", "a": "They went to church.", "segs": [[82.31, 87.44, 9.77], [4.72, 96.17, 52.71]]}]}];
+  var DATA=[{"img": "pg01.jpg", "ratio": 1.3031, "qs": [{"q": "Where did they go shopping?", "a": "They went shopping at the mall.", "segs": [[10.03, 35.88, 52.06]]}, {"q": "What describing words did the author use?", "a": "The author used big, small, short, and tall.", "segs": [[29.49, 55.46, 37.85], [4.14, 65.26, 86.27], [4.14, 75.05, 38.1]]}, {"q": "What did he buy at the mall?", "a": "He bought sidewalk chalk.", "segs": [[55.88, 84.85, 40.09]]}], "title": "Shopping at the Mall"}, {"img": "pg02.jpg", "ratio": 1.3031, "qs": [{"q": "How did the text describe the sauce?", "a": "The sauce was thick and red.", "segs": [[22.4, 40.07, 34.17], [3.66, 49.44, 13.59]]}, {"q": "What did she use her fork to do?", "a": "She used her fork to launch the food.", "segs": [[57.78, 59.02, 34.77], [3.66, 68.6, 37.69]]}, {"q": "What happened at the end?", "a": "They got caught.", "segs": [[47.02, 87.55, 39.91], [3.66, 96.92, 11.8]]}], "title": "Spaghetti Fight!"}, {"img": "pg03.jpg", "ratio": 1.3031, "qs": [{"q": "What can the author’s sister do?", "a": "She can crawl.", "segs": [[10.6, 34.42, 44.09], [4.72, 43.25, 10.05]]}, {"q": "Where does she crawl?", "a": "She crawls across the lawn and inside the house.", "segs": [[44.13, 51.98, 18.5], [4.72, 60.92, 59.28], [4.72, 69.65, 17.14]]}, {"q": "Why does he want his sister to be careful?", "a": "She goes everywhere and grabs everything.", "segs": [[17.32, 43.25, 44.68], [4.72, 51.98, 36.86]]}], "title": "Be Careful!"}, {"img": "pg04.jpg", "ratio": 1.3031, "qs": [{"q": "How does the author describe moths?", "a": "Moths look small and soft.", "segs": [[62.14, 35.13, 8.57], [4.72, 44.92, 38.33]]}, {"q": "Where do moths like to go?", "a": "Moths like to be near cloths.", "segs": [[45.64, 44.92, 21.85], [4.72, 54.72, 25.11]]}, {"q": "What can you do to get rid of moths?", "a": "You can toss in some mothballs.", "segs": [[59.84, 64.51, 36.01], [4.72, 74.31, 65.77]]}], "title": "Moths"}, {"img": "pg05.jpg", "ratio": 1.3031, "qs": [{"q": "What setting should the oven be on?", "a": "The oven should be on “broil.”", "segs": [[28.11, 43.1, 32.96], [4.72, 51.83, 11.27]]}, {"q": "What should you use to cover the pan?", "a": "Use foil to cover the pan.", "segs": [[11.87, 69.29, 38.43]]}, {"q": "Why does the author say, “Make some noise?”", "a": "Because it is time to eat sweet potato chips!", "segs": [[60.46, 86.54, 28.13], [4.72, 95.27, 69.25]]}], "title": "Sweet Potato Chips"}, {"img": "pg06.jpg", "ratio": 1.3031, "qs": [{"q": "Why did she want to catch a fish?", "a": "She wanted to cook it.", "segs": [[17.86, 43.39, 31.04], [4.72, 52.33, 24.67]]}, {"q": "What did she put on the hook?", "a": "She put the bait on the hook.", "segs": [[42.93, 61.28, 8.96], [4.72, 70.22, 35.21]]}, {"q": "What happened to the bait?", "a": "The fish took the bait off the hook.", "segs": [[49.48, 88.32, 47.09], [4.72, 97.26, 15.57]]}], "title": "Fishing"}, {"img": "pg07.jpg", "ratio": 1.3031, "qs": [{"q": "Who took a trip to the zoo?", "a": "The author’s school and friends from another school took a trip.", "segs": [[10.6, 35.13, 48.8], [4.72, 44.92, 52.77], [4.72, 54.72, 28.57]]}, {"q": "What animals did they feed?", "a": "They fed the elephants and the giraffes.", "segs": [[35.87, 54.72, 25.2], [4.72, 64.51, 52.79], [4.72, 74.31, 38.04]]}, {"q": "How did the author feel after going to the zoo?", "a": "The zoo put the author in a great mood.", "segs": [[35.57, 84.1, 56.95]]}], "title": "The Zoo"}, {"img": "pg08.jpg", "ratio": 1.3031, "qs": [{"q": "What is the mouse proud of?", "a": "The mouse is proud of her house.", "segs": [[4.72, 35.13, 51.97]]}, {"q": "What is inside the mouse’s house?", "a": "A couch, a round table, and a TV.", "segs": [[35.01, 44.92, 26.1], [4.72, 54.72, 59.15], [4.72, 64.51, 36.74]]}, {"q": "What does the mouse say about her garden?", "a": "Her garden is ready to sprout.", "segs": [[53.09, 74.31, 5.28], [4.72, 84.1, 45.64]]}], "title": "Proud Mouse"}, {"img": "pg09.jpg", "ratio": 1.3031, "qs": [{"q": "What is wrong with the girl?", "a": "She has a bad cough.", "segs": [[10.6, 34.39, 49.59]]}, {"q": "What does mum think she ought to do?", "a": "She ought to drink a lot of water.", "segs": [[4.72, 43.1, 59.7]]}, {"q": "What is one thing mum bought the girl?", "a": "Mum bought cough drops, water, and medicine.", "segs": [[11.87, 60.56, 51.35], [4.72, 69.29, 22.04]]}], "title": "The Bad Cough"}, {"img": "pg10.jpg", "ratio": 1.3031, "qs": [{"q": "What can owls do with their heads?", "a": "Owls can turn their heads.", "segs": [[58.2, 35.13, 8.22], [4.72, 44.92, 48.96]]}, {"q": "What colour is the owl?", "a": "The owl has brown feathers.", "segs": [[4.72, 54.72, 48.09]]}, {"q": "What type of sound do owls make?", "a": "Owls hoot.", "segs": [[83.81, 84.1, 8.09], [4.72, 93.9, 8.2]]}], "title": "The Owl"}, {"img": "pg11.jpg", "ratio": 1.3031, "qs": [{"q": "Why did Roy get presents?", "a": "Roy had a birthday.", "segs": [[10.6, 35.13, 40.67]]}, {"q": "What is the best toy Roy got?", "a": "The best toy Roy got was an iPod.", "segs": [[44.07, 44.92, 15.34], [4.72, 54.72, 39.57]]}, {"q": "What does the author want?", "a": "The author wants an iPod.", "segs": [[55.87, 84.1, 1.87], [4.72, 93.9, 51.28]]}], "title": "The Best Toy"}, {"img": "pg12.jpg", "ratio": 1.3031, "qs": [{"q": "What was the first thing they looked at?", "a": "They looked at the barn first.", "segs": [[62.98, 51.65, 26.97], [3.93, 60.59, 47.12]]}, {"q": "How big was the yard?", "a": "The yard was as big as a park.", "segs": [[90.38, 69.53, 3.26], [3.93, 78.69, 36.46]]}, {"q": "Why do you think they felt smart?", "a": "They learned how to take care of the animals.", "segs": [[42.98, 78.69, 51.41], [3.93, 87.63, 34.73]]}], "title": "The Farm"}, {"img": "pg13.jpg", "ratio": 1.3031, "qs": [{"q": "What are the girls’ names?", "a": "Their names are Claire and Blair.", "segs": [[9.81, 33.72, 47.13]]}, {"q": "What do Blair and Claire have that is the same?", "a": "They have fair skin and the same pair of shoes.", "segs": [[36.42, 44.02, 25.99], [3.93, 54.66, 60.46], [3.93, 65.1, 49.28]]}, {"q": "What does pair mean?", "a": "A pair means two that go together, like Claire and Blair.", "segs": [[86.73, 85.96, 8.44], [3.93, 96.4, 59.88]]}], "title": "Claire and Blair"}, {"img": "pg14.jpg", "ratio": 1.3031, "qs": [{"q": "What shape is Mare?", "a": "Mare is a square.", "segs": [[44.45, 36.16, 11.67], [4.72, 45.95, 12.48]]}, {"q": "What shape is Mare’s brother?", "a": "Her brother is a circle.", "segs": [[19.79, 45.95, 38.31]]}, {"q": "What does Mare have to do?", "a": "She has to share her toys.", "segs": [[69.23, 75.34, 27.52], [4.72, 85.13, 29.44]]}], "title": "Mare the Square"}, {"img": "pg15.jpg", "ratio": 1.3031, "qs": [{"q": "Where are germs?", "a": "Germs are everywhere.", "segs": [[9.87, 36.55, 41.24]]}, {"q": "What is one way to get rid of germs?", "a": "Wash your hands with soap.", "segs": [[19.49, 75.73, 68.86]]}, {"q": "What can you say while getting hand sanitizer?", "a": "“One pump per person!”", "segs": [[71.48, 85.53, 18.82], [3.98, 95.32, 21.47]]}], "title": "Germs"}, {"img": "pg16.jpg", "ratio": 1.3031, "qs": [{"q": "Where was Grandpa?", "a": "Grandpa was at the author’s house.", "segs": [[10.6, 34.3, 45.3]]}, {"q": "What is something Grandpa said?", "a": "“I love you my dear.”", "segs": [[51.31, 60.71, 18.3], [4.72, 69.65, 14.67]]}, {"q": "Why was Grandpa saying these things?", "a": "He said she would have a great year and had nothing to fear.", "segs": [[21.94, 69.65, 73.17], [4.72, 78.38, 43.29]]}], "title": "Grandpa’s Words"}, {"img": "pg17.jpg", "ratio": 1.3031, "qs": [{"q": "What grade is Mirna in?", "a": "Mirna is in third grade.", "segs": [[35.42, 34.3, 38.75]]}, {"q": "What did Mirna get that she was proud of?", "a": "She got a new skirt.", "segs": [[4.72, 43.03, 33.9]]}, {"q": "How did Mirna’s skirt get dirty?", "a": "A bird flew by and dropped dirt on her skirt.", "segs": [[49.3, 69.65, 46.97], [4.72, 78.38, 28.34]]}], "title": "Mirna’s Skirt"}, {"img": "pg18.jpg", "ratio": 1.3031, "qs": [{"q": "Who is telling the story?", "a": "The person Irelyn hired to fix her tire is telling the story.", "segs": [[42.98, 51.04, 6.15], [3.41, 60.84, 41.37]]}, {"q": "Why did Irelyn call him?", "a": "She got a flat tire.", "segs": [[23.49, 41.25, 21.84], [3.41, 51.04, 36.97]]}, {"q": "What did he do after he put out the fire?", "a": "He put on a new tire.", "segs": [[78.04, 80.43, 13.09], [3.41, 90.22, 75.84]]}], "title": "Tire on Fire"}, {"img": "pg19.jpg", "ratio": 1.3031, "qs": [{"q": "What is the horse’s name?", "a": "The horse’s name is Borris.", "segs": [[36.26, 34.42, 32.09]]}, {"q": "What did he say about Borris’ size?", "a": "He is short because he is still growing.", "segs": [[48.01, 51.98, 19.09], [4.72, 60.92, 64.04]]}, {"q": "Where will he ride Borris?", "a": "He will ride Borris in the parade.", "segs": [[66.35, 87.53, 25.14], [4.72, 96.26, 43.29]]}], "title": "Borris the Horse"}, {"img": "pg20.jpg", "ratio": 1.3031, "qs": [{"q": "Where was the field where they played?", "a": "The field was near the shore.", "segs": [[28.5, 43.03, 23.18], [3.51, 51.98, 26.09]]}, {"q": "What did he do when he played?", "a": "He scored a goal.", "segs": [[74.75, 78.38, 18.04], [3.51, 87.32, 7.51]]}, {"q": "How did he feel after the game?", "a": "He felt sore.", "segs": [[15.82, 96.26, 52.74]]}], "title": "Soccer"}, {"img": "pg21.jpg", "ratio": 1.3031, "qs": [{"q": "Where did they go to play golf?", "a": "They went to the golf course.", "segs": [[4.72, 61.28, 52.14]]}, {"q": "What happened at the fourth hole?", "a": "He was ready for a break.", "segs": [[4.72, 70.22, 83.04]]}, {"q": "What did dad tell the boy?", "a": "Dad said, “Just do your best and have fun!”", "segs": [[4.72, 88.32, 57.05]]}], "title": "Golfing"}, {"img": "pg22.jpg", "ratio": 1.3031, "qs": [{"q": "What made the class safe?", "a": "Huge clear boards made the class safe.", "segs": [[40.45, 60.14, 52.18], [3.84, 69.08, 47.38]]}, {"q": "What sound did the lions make?", "a": "The lions roared.", "segs": [[52.52, 69.08, 37.18], [3.84, 78.23, 24.18]]}, {"q": "How did the author describe the lion’s mane?", "a": "It was coarse.", "segs": [[16.18, 87.18, 25.02]]}], "title": "With the Lions"}, {"img": "pg23.jpg", "ratio": 1.3031, "qs": [{"q": "What happened to the author’s finger?", "a": "He burned his finger.", "segs": [[50.13, 60.83, 33.4]]}, {"q": "Who helped the author?", "a": "A nurse helped him.", "segs": [[45.56, 69.56, 31.69]]}, {"q": "Where did they go after the doctor?", "a": "They went to church.", "segs": [[82.31, 87.44, 9.77], [4.72, 96.17, 52.71]]}], "title": "Last Saturday"}];
   var COLORS=['#e5484d','#2f6fed','#1f9d55'];
   var stage=document.getElementById('stage');
   function fit(){ var s=Math.min(innerWidth/1280, innerHeight/720); stage.style.transform='scale('+s+')'; }
   addEventListener('resize',fit); fit();
-  var cur=0, step=0, N=0;
+  var cur=0, step=0, N=0, pending=0;
   function pad(n){return (n<10?'0':'')+n;}
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+
+  // title list
+  var items='';
+  DATA.forEach(function(s,i){ items+='<a href="#'+(i+1)+'"><span class="no">'+(i+1)+'</span><span>'+esc(s.title)+'</span></a>'; });
+  document.getElementById('items').innerHTML=items;
+  document.getElementById('count').textContent=DATA.length+'개 지문 · 제목을 누르면 해당 슬라이드가 열려요.';
+
   function build(i, startStep){
     cur=i; var s=DATA[i]; N=s.qs.length; step=startStep||0;
     var P=document.getElementById('passage');
-    var h=Math.round(760/s.ratio); P.style.height=h+'px';
-    var html='<img src="'+s.img+'" alt="passage '+(i+1)+'">';
+    P.style.height=Math.round(760/s.ratio)+'px';
+    var html='<img src="'+s.img+'" alt="'+esc(s.title)+'">';
     s.qs.forEach(function(q,k){
       q.segs.forEach(function(g,j){
         html+='<div class="hl" data-q="'+k+'" style="left:'+g[0]+'%;top:'+g[1]+'%;width:'+g[2]+'%;background:'+COLORS[k]+';transition-delay:'+(j*0.35)+'s"></div>';
@@ -66,7 +101,8 @@
     document.getElementById('qa').innerHTML=qa;
     document.getElementById('dots').innerHTML=dots;
     document.getElementById('pageno').textContent=pad(i+1)+' / '+DATA.length;
-    try{ history.replaceState(null,'','#'+(i+1)); }catch(e){}
+    document.getElementById('stitle').textContent=s.title;
+    document.title=s.title+' - Diphthongs & R-Controlled Vowels';
     render();
   }
   function render(){
@@ -75,21 +111,36 @@
     });
     [].forEach.call(document.querySelectorAll('#dots i'),function(d,k){ d.classList.toggle('on',k<step); });
   }
-  function next(){ if(step<N){step++;render();} else if(cur<DATA.length-1){build(cur+1,0);} }
-  function prev(){ if(step>0){step--;render();} else if(cur>0){build(cur-1,DATA[cur-1].qs.length);} }
+  function route(){
+    var h=(location.hash||'').replace('#','');
+    var n=parseInt(h,10);
+    if(n>=1&&n<=DATA.length){
+      document.body.className='view-slide';
+      build(n-1,pending); pending=0; fit();
+    } else {
+      document.body.className='view-list';
+      document.title='Diphthongs & R-Controlled Vowels - Read and Respond';
+      window.scrollTo(0,0);
+    }
+  }
+  function go(i,startStep){ pending=startStep||0; if(location.hash==='#'+(i+1)){ build(i,pending); pending=0; } else location.hash='#'+(i+1); }
+  function next(){ if(step<N){step++;render();} else if(cur<DATA.length-1){go(cur+1,0);} }
+  function prev(){ if(step>0){step--;render();} else if(cur>0){go(cur-1,DATA[cur-1].qs.length);} }
   stage.addEventListener('click',next);
-  document.getElementById('home').addEventListener('click',function(e){e.stopPropagation();});
+  document.getElementById('toList').addEventListener('click',function(e){e.stopPropagation();});
+  addEventListener('hashchange',route);
   addEventListener('keydown',function(e){
+    if(document.body.className!=='view-slide') return;
     var k=e.key;
     if(k===' '||k==='Enter'||k==='ArrowRight'||k==='PageDown'){e.preventDefault();next();}
     else if(k==='ArrowLeft'||k==='PageUp'){e.preventDefault();prev();}
-    else if(k==='ArrowDown'){e.preventDefault(); if(cur<DATA.length-1)build(cur+1,0);}
-    else if(k==='ArrowUp'){e.preventDefault(); if(cur>0)build(cur-1,0);}
+    else if(k==='ArrowDown'){e.preventDefault(); if(cur<DATA.length-1)go(cur+1,0);}
+    else if(k==='ArrowUp'){e.preventDefault(); if(cur>0)go(cur-1,0);}
     else if(k==='r'||k==='R'){step=0;render();}
+    else if(k==='l'||k==='L'||k==='Escape'){location.hash='#list';}
     else if(k==='f'||k==='F'){ try{ var r=document.documentElement.requestFullscreen; if(r) r.call(document.documentElement).catch(function(){}); }catch(err){} }
   });
-  var start=parseInt((location.hash||'').replace('#',''),10);
-  build(start>=1&&start<=DATA.length?start-1:0,0);
+  route();
 })();
 </script>
 </body>
